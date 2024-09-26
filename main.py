@@ -1,7 +1,7 @@
 # app/main.py
 from fastapi import FastAPI, HTTPException, Query
-from app.download_handler import download_audio_from_youtube
-from app.whisper_handler import transcribe_audio_with_whisper
+from download_handler import download_audio_from_youtube
+from whisper_handler import transcribe_audio_with_whisper
 import os
 
 app = FastAPI()
@@ -10,7 +10,7 @@ app = FastAPI()
 async def download_audio(url: str = Query(...)):
     try:
         # Define la ruta donde se guardará el archivo descargado
-        audio_output_path = os.path.abspath('../content/audio') 
+        audio_output_path = os.path.abspath('./content/audio') 
 
         # Descargar el audio con yt-dlp
         download_audio_from_youtube(url, audio_output_path)
