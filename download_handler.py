@@ -1,6 +1,12 @@
 # app/download_handler.py
 import yt_dlp as youtube_dl
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+username = os.getenv("YOUTUBE_USERNAME")
+password = os.getenv("YOUTUBE_PASSWORD")
 
 # Función para descargar el video de YouTube como archivo MP3
 def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
@@ -17,6 +23,8 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
             'preferredquality': '192',
         }],
         'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
+        'username': username,  # Usar la variable de entorno para el nombre de usuario
+        'password': password,  # Usar la variable de entorno para la contraseña
     }
 
     try:

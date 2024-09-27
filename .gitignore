@@ -2,3 +2,6 @@
 /__pycache__
 /whisper
 /venv
+/.env
+.env
+/content
