@@ -1,2 +1,4 @@
 /fastapi
 /__pycache__
+/whisper
+/venv
