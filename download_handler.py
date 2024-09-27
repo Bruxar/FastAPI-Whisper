@@ -1,6 +1,6 @@
 # app/download_handler.py
-import yt_dlp as youtube_dl
 import os
+from pytube import YouTube
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,20 +15,15 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
-        'username': username,  # Usar la variable de entorno para el nombre de usuario
-        'password': password,  # Usar la variable de entorno para la contraseña
-    }
-
     try:
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([youtube_url])
+        # Descargar el video con pytube
+        yt = YouTube(youtube_url)
+        print(yt.title)
+        print(yt.fmt_streams)
+        # Filtrar para obtener solo la transmisión de audio
+        streams = yt.streams.all()
+        for stream in streams:
+            print(stream)
+
     except Exception as e:
         raise Exception(f"Error al descargar el audio: {e}")
