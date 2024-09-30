@@ -1,8 +1,20 @@
-# app/whisper_transcriber.py
-import whisper
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-# Función para procesar el audio con Whisper
+load_dotenv()
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+print(OPENAI_API_KEY)
+
+# Función para transcribir el audio usando la API de Whisper
 def transcribe_audio_with_whisper(audio_path):
-    model = whisper.load_model("small")  # Cargar el modelo Whisper
-    result = model.transcribe(audio_path)
-    return result["text"]
+    # Cargar la clave de la API desde las variables de entorno
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    with open(audio_path, "rb") as audio_file:
+        transcription = client.audio.transcriptions.create(
+            model="whisper-1",
+            file=audio_file
+        )
+        # Devolver el texto de la transcripción
+        return transcription.text
+
