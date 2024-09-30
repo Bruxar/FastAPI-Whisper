@@ -2,6 +2,7 @@
 import yt_dlp as youtube_dl
 import os
 
+
 # Función para descargar el video de YouTube como archivo MP3
 def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
     # Crea la carpeta content en la raíz si no existe
@@ -17,6 +18,8 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
             'preferredquality': '192',
         }],
         'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
+        'username': 'oauth2',
+        'password': ' ',
     }
 
     try:
