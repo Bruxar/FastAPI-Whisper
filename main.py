@@ -13,7 +13,10 @@ async def download_audio(url: str = Query(...)):
         audio_output_path = os.path.abspath('./content/audio.mp3') 
 
         # Descargar el audio con yt-dlp
-        download_audio_from_youtube(url, audio_output_path)
+        result = download_audio_from_youtube(url, audio_output_path)
+
+        if result.get("auth_message"):
+            return {"message": result["message"], "auth_message": result["auth_message"]}
 
         # Verificar si el archivo fue creado
         if not os.path.exists(audio_output_path):
@@ -25,7 +28,7 @@ async def download_audio(url: str = Query(...)):
 
         # (Opcional) Eliminar el archivo de audio después de la transcripción
         os.remove(audio_output_path)
-
+        
         return {"message": "Transcripcion completada", "transcription": transcription}
 
     except Exception as e:
