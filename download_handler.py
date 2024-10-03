@@ -1,6 +1,7 @@
 # app/download_handler.py
 import subprocess
 import os
+import re
 
 # Función para descargar el video de YouTube como archivo MP3
 def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
@@ -24,21 +25,25 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
     try:
         # Ejecutar el comando yt-dlp y capturar la salida
         result = subprocess.run(ydl_command, capture_output=True, text=True)
-
-        # Verificar si hay errores en la salida
+        
         if result.returncode != 0:
-            raise Exception(f"Error al descargar el audio: {result.stderr.strip()}")
+            error_message = result.stderr.strip()
+            # Busca el mensaje de autorización
+            auth_message = re.search(r'To give yt-dlp access to your account, go to (.+?) and enter code (\w+-\w+-\w+)', error_message)
 
-        # Comprobar si el mensaje de autenticación está en la salida
-        auth_message = None
-        if 'To give yt-dlp access to your account' in result.stdout:
-            # Captura el mensaje de autenticación
-            auth_message = result.stdout.splitlines()[-1]  # Obtiene la última línea que contiene el mensaje
+            if auth_message:
+                verification_url = auth_message.group(1)
+                code = auth_message.group(2)
+                return {
+                    "message": "Authorization required",
+                    "auth_message": f"Go to {verification_url} and enter code {code}"
+                }
 
-        # Retornar la respuesta
+            # Si es otro tipo de error, lo manejamos como tal
+            raise Exception(f"Error al descargar el audio: {error_message}")
+
         return {
-            "message": "Audio descargado correctamente" if auth_message is None else "Necesitas autorizar el acceso.",
-            "auth_message": auth_message,  # Si hay mensaje de autenticación, se incluye
+            "message": "Audio descargado correctamente",
             "output": result.stdout.strip()
         }
 
