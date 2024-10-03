@@ -1,5 +1,5 @@
 # app/download_handler.py
-import yt_dlp as youtube_dl
+import subprocess
 import os
 
 # Función para descargar el video de YouTube como archivo MP3
@@ -9,20 +9,28 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
-        'username': 'oauth2',
-        'password': ' ',
-    }
+    ydl_command = [
+        'yt-dlp', 
+        '--format', 'bestaudio/best', 
+        '--postprocessor-args', 'FFmpegExtractAudio', 
+        '--audio-format', 'mp3', 
+        '--audio-quality', '192K', 
+        '--output', output_path,
+        '--username', 'oauth2', 
+        '--password', ' ',
+        youtube_url
+    ]
 
     try:
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([youtube_url])
+        # Ejecutar el comando yt-dlp y capturar la salida
+        result = subprocess.run(ydl_command, capture_output=True, text=True)
+        
+        # Comprobar si hay errores en la salida
+        if result.returncode != 0:
+            raise Exception(f"Error al descargar el audio: {result.stderr.strip()}")
+
+        # Retornar un mensaje de éxito
+        return {"message": "Audio descargado correctamente", "output": result.stdout.strip()}
+
     except Exception as e:
-        raise Exception(f"Error al descargar el audio: {e}")
+        raise Exception(f"Error al descargar el audio: {str(e)}")
