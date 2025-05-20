@@ -1,46 +1,46 @@
 # app/download_handler.py
 import yt_dlp as youtube_dl
-import os, random, string
+import os, random, string, uuid
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 
-def _bright_proxy() -> str:
-    """Devuelve la URL del proxy con un session-id aleatorio para forzar rotación IP."""
-    base = os.getenv("YT_PROXY")          # tomado del entorno
+def _bright_proxy() -> str | None:
+    """Devuelve la URL del proxy Bright Data con session-id aleatorio."""
+    base = os.getenv("YT_PROXY")              # NO debe llevar comillas en la env-var
     if not base:
-        return None                       # sin proxy → descarga directa
-    #  Añade un sufijo -session-<rnd> al nombre de usuario
+        return None
     rnd = ''.join(random.choices(string.hexdigits.lower(), k=8))
-    return base.replace(":gsre", f"-session-{rnd}:gsre", 1)
+    # Inserta -session-<rnd> justo antes de la contraseña (tras el primer ':')
+    return base.replace(":", f"-session-{rnd}:", 1)
 
-# Función para descargar el video de YouTube como archivo MP3
-def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
-    # Crea la carpeta content en la raíz si no existe
-    output_dir = os.path.dirname(output_path)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+def download_audio_from_youtube(youtube_url: str, output_dir: str = "./content") -> str:
+    """Descarga audio y devuelve la ruta final del .mp3 generado."""
+    os.makedirs(output_dir, exist_ok=True)
+    tmp_name = uuid.uuid4().hex                        # nombre base único
 
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
+        "format": "bestaudio/best",
+        "postprocessors": [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
         }],
-        'verbose': True,
-        'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
+        # SIN extensión fija → %(ext)s la pone yt-dlp; ffmpeg la cambia a .mp3
+        "outtmpl": os.path.join(output_dir, f"{tmp_name}.%(ext)s"),
         "user_agent": UA,
-        "http_headers": {"Accept-Language": "es-ES,es;q=0.9,en;q=0.8",},
+        "http_headers": {"Accept-Language": "es-ES,es;q=0.9,en;q=0.8"},
         "sleep_interval": 5,
         "max_sleep_interval": 15,
         "proxy": _bright_proxy(),
         "retries": 3,
         "fragment_retries": 3,
+        "quiet": False,
+        "verbose": True,
     }
 
-    try:
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([youtube_url])
-    except Exception as e:
-        raise Exception(f"Error al descargar el audio: {e}")
+    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(youtube_url, download=True)
+        # yt-dlp >=2024.04 expone 'filepath' con la ruta final
+        final_path = info.get("filepath") or ydl.prepare_filename(info).rsplit('.', 1)[0] + ".mp3"
+        return final_path
