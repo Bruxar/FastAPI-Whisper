@@ -1,18 +1,25 @@
 # app/download_handler.py
 import yt_dlp as youtube_dl
 import os, random, string, uuid
+from urllib.parse import urlsplit, urlunsplit
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
 
 def _bright_proxy() -> str | None:
-    """Devuelve la URL del proxy Bright Data con session-id aleatorio."""
-    base = os.getenv("YT_PROXY")              # NO debe llevar comillas en la env-var
+    base = os.getenv("YT_PROXY")          # sin comillas en la env-var
     if not base:
         return None
+
+    parts = urlsplit(base)                # descompone esquema, netloc, path…
+    user_pwd, host_port = parts.netloc.split("@")      # creds@proxyhost
+    user, pwd = user_pwd.split(":", 1)
+
     rnd = ''.join(random.choices(string.hexdigits.lower(), k=8))
-    # Inserta -session-<rnd> justo antes de la contraseña (tras el primer ':')
-    return base.replace(":", f"-session-{rnd}:", 1)
+    user = f"{user}-session-{rnd}"        # añade el token después del username
+
+    new_netloc = f"{user}:{pwd}@{host_port}"
+    return urlunsplit((parts.scheme, new_netloc, "", "", ""))
 
 def download_audio_from_youtube(youtube_url: str, output_dir: str = "./content") -> str:
     """Descarga audio y devuelve la ruta final del .mp3 generado."""
