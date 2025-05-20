@@ -28,6 +28,7 @@ def download_audio_from_youtube(youtube_url, output_path='./content/audio.mp3'):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
+        'verbose': True,
         'outtmpl': output_path,  # Guarda el archivo directamente como audio.mp3
         "user_agent": UA,
         "http_headers": {"Accept-Language": "es-ES,es;q=0.9,en;q=0.8",},
